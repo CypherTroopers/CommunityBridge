@@ -1,0 +1,7 @@
+*.log
+*.key
+*.pem
+/node_modules
+/.env
+.env
+newfrontend_backup/

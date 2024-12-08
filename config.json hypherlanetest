@@ -1,0 +1,30 @@
+{
+  "chains": {
+    "cypherium": {
+      "httpRpc": "testRPC",
+      "wsRpc": "tetsWSS",
+      "signerPrivateKey": "0xprivatekey",
+      "chainId": 16166
+    },
+    "xdc": {
+      "httpRpc": "https://rpc.primenumbers.xyz/",
+      "wsRpc": "wss://ws.xinfin.network",
+      "signerPrivateKey": "0xprivatekey",
+      "chainId": 50
+    }
+  },
+  "agent": {
+    "relayer": {
+      "enabled": true,
+      "metricsPort": 9090,
+      "maxRetries": 5,
+      "retryDelayMs": 10000
+    },
+    "gasPaymentEnforcer": {
+      "enabled": true
+    }
+  },
+  "logging": {
+    "level": "info"
+  }
+}

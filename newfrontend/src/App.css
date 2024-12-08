@@ -1,0 +1,363 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  background-color: #1e1e2f;
+  color: #ffffff;
+  margin: 0;
+  padding: 0;
+}
+
+.bridge-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.bridge-header {
+  text-align: center;
+  padding: 20px;
+}
+
+.token-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px; 
+}
+
+.token-links a {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+}
+
+.token-links img {
+  width: 40px; 
+  height: auto;
+  margin-right: 8px;
+  border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .token-links a {
+    flex-direction: column;
+    align-items: center; 
+    text-align: center;
+  }
+
+  .token-links img {
+    margin-bottom: 10px; 
+    width: 30px; 
+    height: auto;
+  }
+}
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.header-image {
+  width: 80px; 
+  height: 80px;
+  border-radius: 50%; 
+  object-fit: cover; 
+}
+
+@media (max-width: 1024px) {
+  .header-image {
+    width: 70px;
+    height: 70px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-image {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+.bridge-header h1 {
+  margin: 0 15px;
+  font-size: 2em;
+}
+
+.bridge-header p {
+  margin-top: 10px;
+  font-size: 1em;
+  color: #aaa; 
+}
+
+.bridge-body {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+}
+
+.network-selection,
+.transaction-form {
+  width: 45%;
+  background-color: #2a2a3b;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.wallet-info {
+  background-color: #2a2a3b;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 5px;
+  text-align: center;
+  color: #fff;
+}
+
+.form-select,
+input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: white;
+}
+
+.btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+}
+
+.message {
+  text-align: center;
+  padding: 10px;
+  margin-top: 20px;
+}
+
+.message.success {
+  background-color: #28a745;
+}
+
+.message.error {
+  background-color: #dc3545;
+}
+
+.message.waiting {
+  background-color: #ffc107;
+}
+
+.spinner {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.3);
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: rotateSpinner 1.2s linear infinite;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.spinner::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  background-color: #007bff;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  animation: dataPacket 1.2s linear infinite;
+}
+
+@keyframes rotateSpinner {
+  0% {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes dataPacket {
+  0% {
+    top: 10%;
+    left: 50%;
+  }
+  25% {
+    top: 50%;
+    left: 90%;
+  }
+  50% {
+    top: 90%;
+    left: 50%;
+  }
+  75% {
+    top: 50%;
+    left: 10%;
+  }
+  100% {
+    top: 10%;
+    left: 50%;
+  }
+}
+
+.complete-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #28a745;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 1.5em;
+  font-weight: bold;
+  z-index: 1000;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  color: #333;
+  padding: 20px 30px;
+  border-radius: 10px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.modal-content h2 {
+  margin-top: 0;
+  color: #007bff;
+}
+
+.modal-content p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+.modal-content .btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 1em;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Amount to Bridge */
+.transaction-form h2 {
+  font-size: 1.2em;
+  color: #ddd;
+  margin-bottom: 10px;
+}
+
+.transaction-form .actual-received {
+  color: #28a745;
+  font-size: 1em;
+  margin-top: 5px;
+}
+
+.transaction-form .error-message {
+  color: #dc3545;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+.btn-secondary {
+  background-color: #555;
+  color: white;
+  font-weight: bold;
+}
+
+.btn-secondary:hover {
+  background-color: #666;
+}
+
+.btn-primary {
+  background-color: #007bff;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .bridge-container {
+    padding: 10px;
+  }
+
+  .bridge-body {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .network-selection,
+  .transaction-form {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .form-select,
+  input {
+    font-size: 14px;
+    padding: 8px;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .message {
+    font-size: 14px;
+  }
+

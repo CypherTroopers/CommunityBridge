@@ -1,0 +1,501 @@
+import React, { useState, useEffect } from 'react';
+import { ethers } from 'ethers';
+import axios from 'axios';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
+
+function App() {
+  const [provider, setProvider] = useState(null);
+  const [signer, setSigner] = useState(null);
+  const [balance, setBalance] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [responseMessage, setResponseMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [waitingMessage, setWaitingMessage] = useState('');
+  const [fromChain, setFromChain] = useState('');
+  const [toChain, setToChain] = useState('');
+  const [fromAsset, setFromAsset] = useState('');
+  const [toAsset, setToAsset] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isComplete, setIsComplete] = useState(false);
+  const [lockUnlockAbi, setLockUnlockAbi] = useState(null);
+  const [mintBurnAbi, setMintBurnAbi] = useState(null);
+  const [totalLocked, setTotalLocked] = useState(null);
+  const [totalMinted, setTotalMinted] = useState(null);
+  const [completionMessage, setCompletionMessage] = useState(''); 
+
+  const erc20Abi = ["function balanceOf(address owner) view returns (uint256)"];
+
+  const networks = {
+    Cypherium: { chainId: 16166, name: 'Cypherium', asset: 'CPH' },
+    XDC: { chainId: 50, burnContractAddress: "0xc685f869d929b6f101f36ddb68ba008f929e5b7d", name: 'XDC', asset: 'wCPH' },
+    ETH: { chainId: 1, burnContractAddress: "0xc7D14682A1E7BBDEc0B60358786381c9bB44870F", name: 'ETH', asset: 'wCPH' },
+    BNB: { chainId: 56, burnContractAddress: "0xccd16509C3c9417563492a929f46fAA6cDE69451", name: 'BNB', asset: 'wCPH' }
+  };
+
+  useEffect(() => {
+    const fetchAbis = async () => {
+      try {
+        const lockUnlockAbiResponse = await fetch(`${process.env.PUBLIC_URL}/LockUnlock.abi.json`);
+        const lockUnlockAbiData = await lockUnlockAbiResponse.json();
+        setLockUnlockAbi(lockUnlockAbiData);
+
+        const mintBurnAbiResponse = await fetch(`${process.env.PUBLIC_URL}/MintBurn.abi.json`);
+        const mintBurnAbiData = await mintBurnAbiResponse.json();
+        setMintBurnAbi(mintBurnAbiData);
+      } catch (error) {
+        console.error("Failed to fetch ABI files:", error);
+        setErrorMessage("Failed to load ABI files. Please try again.");
+      }
+    };
+    fetchAbis();
+  }, []);
+
+useEffect(() => {
+  const fetchTotals = async () => {
+    try {
+
+      const response = await axios.get('/api/totals');
+      setTotalLocked(response.data.totalLocked);
+      setTotalMinted(response.data.totalMinted);
+    } catch (error) {
+      console.error('Error fetching totals:', error);
+    }
+  };
+
+  fetchTotals();
+}, []);
+
+const fetchTokenBalance = async (tokenAddress) => {
+  if (!signer) {
+    setBalance(ethers.BigNumber.from("0"));
+    setErrorMessage("Failed to fetch balance: Invalid signer.");
+    return;
+  }
+
+  try {
+    let tokenBalance;
+    if (fromChain === 'Cypherium') {
+      const nativeBalance = await signer.getBalance();
+      tokenBalance = nativeBalance;
+    } else if (tokenAddress) {
+      const tokenContract = new ethers.Contract(tokenAddress, erc20Abi, signer);
+      tokenBalance = await tokenContract.balanceOf(await signer.getAddress());
+    } else {
+      tokenBalance = ethers.BigNumber.from("0");
+    }
+
+    setBalance(tokenBalance);
+  } catch (error) {
+    setBalance(ethers.BigNumber.from("0"));
+    setErrorMessage(`Failed to fetch balance: ${error.message}`);
+  }
+};
+
+useEffect(() => {
+  if (fromChain && signer) {
+    const tokenAddress = networks[fromChain]?.burnContractAddress;
+    fetchTokenBalance(tokenAddress);
+  }
+}, [fromChain, signer]);
+
+const [lockAmount, setLockAmount] = useState('');
+const [burnAmount, setBurnAmount] = useState('');
+
+const handleMaxButtonClick = () => {
+  if (!balance || balance.isZero()) {
+    setErrorMessage("Balance not available. Please connect your wallet.");
+    return;
+  }
+
+  const balanceToUse = ethers.utils.formatUnits(balance, 18);
+
+  if (fromChain === 'Cypherium') {
+    setLockAmount(balanceToUse); 
+  } else {
+    setBurnAmount(balanceToUse);
+  }
+};
+
+const connectWallet = async (chainId) => {
+  if (!window.ethereum) {
+    setErrorMessage("MetaMask is not installed.");
+    return;
+  }
+
+  try {
+    const hexChainId = `0x${parseInt(chainId, 10).toString(16)}`;
+
+    await window.ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [{ chainId: hexChainId }],
+    });
+
+    const tempProvider = new ethers.providers.Web3Provider(window.ethereum);
+    await tempProvider.send("eth_requestAccounts", []);
+    const tempSigner = tempProvider.getSigner();
+    const userAddress = await tempSigner.getAddress();
+
+    setProvider(tempProvider);
+    setSigner(tempSigner);
+    setWalletAddress(userAddress);
+    setErrorMessage('');
+    await fetchTokenBalance(networks[fromChain]?.burnContractAddress);
+  } catch (error) {
+    setErrorMessage(
+      error.code === 4902
+        ? "Network not available in MetaMask. Please add it manually."
+        : `Failed to connect wallet or switch network. Error: ${error.message}`
+    );
+  }
+};
+
+  const handleFromChainChange = async (event) => {
+    const selectedChain = event.target.value;
+    setFromChain(selectedChain);
+    setFromAsset(networks[selectedChain]?.asset || '');
+    setResponseMessage('');
+    setErrorMessage('');
+    setWaitingMessage('');
+
+    const networkConfig = networks[selectedChain];
+    if (networkConfig) {
+      await connectWallet(networkConfig.chainId);
+    } else {
+      setErrorMessage("Unsupported network selected.");
+    }
+
+    if (selectedChain === 'Cypherium') {
+      setToChain('');
+      setToAsset('');
+    }
+  };
+
+  const handleToChainChange = (event) => {
+    const selectedChain = event.target.value;
+    setToChain(selectedChain);
+    console.log("Selected toChain:", selectedChain);
+    setToAsset(networks[selectedChain]?.asset || '');
+  };
+
+  const isLockEnabled = fromChain === 'Cypherium';
+  const isBurnEnabled = ['XDC', 'ETH', 'BNB'].includes(fromChain);
+
+const handleLock = async (event) => {
+  event.preventDefault();
+  console.log("Is Lock Enabled:", isLockEnabled);
+  setResponseMessage('');
+  setErrorMessage('');
+  setWaitingMessage('Bridge Transaction is being confirmed. Please wait a moment.');
+  setIsLoading(true);
+  setIsComplete(false);
+
+  const amount = document.getElementById('lockAmount').value;
+  const parsedAmount = ethers.utils.parseEther(amount);
+
+  if (!toChain) {
+    setErrorMessage("Please select a valid To Chain.");
+    setIsLoading(false);
+    return;
+  }
+
+  try {
+    const network = await provider.getNetwork();
+    if (network.chainId !== networks.Cypherium.chainId) {
+      throw new Error("Please connect to the Cypherium network to perform this action.");
+    }
+
+    const lockUnlockContract = new ethers.Contract(
+      "0x10A3df5d7dB763BeC70cE1c52000C02E703B1413",
+      lockUnlockAbi,
+      signer
+    );
+
+    // 手数料を引いた後の最低ロック額を確認
+    if (parsedAmount.lt(ethers.utils.parseEther("10000"))) {
+      setErrorMessage("Amount must be greater than the minimum lock limit after fees.");
+      setIsLoading(false);
+      return;
+    }
+
+    // ロック処理
+    const tx = await lockUnlockContract.lock(
+      ethers.utils.formatBytes32String(toChain), // ネットワーク名を引数に指定
+      { value: parsedAmount }
+    );
+
+    await tx.wait();
+
+    // ミント処理
+    const mintResult = await mintTokens(toChain, walletAddress, parsedAmount, tx.hash);
+    if (mintResult) {
+      setResponseMessage(`Bridge transaction successful: ${mintResult}`);
+      setCompletionMessage("ALL DONE! Check your wallet!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 3000);
+    }
+    setIsComplete(true);
+
+  } catch (error) {
+    setErrorMessage(error.message);
+  } finally {
+    setIsLoading(false);
+    setWaitingMessage('');
+  }
+};
+
+  const mintTokens = async (network, user, amount, transactionHash) => {
+    try {
+      const response = await fetch('/api/mint', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ network, user, amount: amount.toString(), transactionHash })
+      });
+      const data = await response.json();
+      if (data.success) {
+        return data.txHash;
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      setErrorMessage(error.message);
+      return null;
+    }
+  };
+
+const handleBurn = async (event) => { 
+  event.preventDefault();
+  if (!isBurnEnabled || !mintBurnAbi) return;
+
+  setResponseMessage('');
+  setErrorMessage('');
+  setWaitingMessage('Bridge Transaction is being confirmed. Please wait a moment.');
+  setIsLoading(true);
+  setIsComplete(false);
+
+  const amount = document.getElementById('burnAmount').value;
+  const parsedAmount = ethers.utils.parseEther(amount);
+
+  try {
+    const network = await provider.getNetwork();
+    const networkConfig = Object.values(networks).find(n => n.chainId === network.chainId);
+
+    if (!networkConfig) {
+      throw new Error("Please connect to a supported network to perform this action.");
+    }
+
+    const burnContract = new ethers.Contract(
+      networkConfig.burnContractAddress,
+      mintBurnAbi,
+      signer
+    );
+
+    const tx = await burnContract.burn(parsedAmount);
+    await tx.wait();
+
+    const unlockResult = await unlockTokensOnCypherium(walletAddress, parsedAmount, tx.hash, fromChain);
+    if (unlockResult) {
+      setResponseMessage(`Unlock transaction successful: ${unlockResult}`);
+      setCompletionMessage("Bridge completed! Check your wallet!"); 
+      setTimeout(() => {
+        window.location.reload(); 
+      }, 3000);
+    }
+    setIsComplete(true);
+
+  } catch (error) {
+    setErrorMessage(error.message);
+  } finally {
+    setIsLoading(false);
+    setWaitingMessage('');
+  }
+};
+
+  const unlockTokensOnCypherium = async (user, amount, transactionHash, burnNetwork) => {
+    try {
+      const response = await fetch('/api/unlock', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ network: burnNetwork, user, amount: amount.toString(), transactionHash })
+      });
+      const data = await response.json();
+      if (data.success) {
+        return data.txHash;
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error) {
+      setErrorMessage(error.message);
+      return null;
+    }
+  };
+return (
+  <>
+    {/* UI Rendering */}
+    {isLoading && (
+      <div className="overlay">
+        <div className="spinner"></div>
+        <p style={{ marginBottom: "200px", textAlign: "center" }}>
+          Bridge transaction is being confirmed.<br />
+          Please wait until 'ALL DONE' is displayed.
+        </p>
+      </div>
+    )}
+
+    {/* Completion Message */}
+    {completionMessage && (
+      <div className="overlay">
+        <p style={{ marginBottom: "200px", textAlign: "center", fontSize: "24px", fontWeight: "bold" }}>
+          {completionMessage}
+        </p>
+      </div>
+    )}
+
+    <header className="bridge-header">
+      <h1>Cypherium Community Bridge</h1>
+      {/* */}
+<div className="token-links">
+  <a href="https://xdcscan.com/token/0x8220a8f26e8acae058fc83bc74ee37b5da9b6e97" target="_blank" rel="noopener noreferrer">
+    <img src="https://maroon-proud-cod-903.mypinata.cloud/ipfs/QmfRfHSWmjh5dC2AjGQ78BfZFkL2ch2kU2q1NSaWeSZC5C?pinataGatewayToken=cTSFGarZKrQBYaNWIpSmlyFsuBoJ_LyocJ85LhvCU7kd4PKJYXMW6edUPjYdhYDs" alt="XDC logo" className="token-logo" />
+    wCPH on XDC Click here
+  </a>
+  <a href="https://etherscan.io/token/0x8220a8f26e8acae058fc83bc74ee37b5da9b6e97" target="_blank" rel="noopener noreferrer">
+    <img src="https://maroon-proud-cod-903.mypinata.cloud/ipfs/QmYD6DSu6VoZ7otcYiEsNeN5MJ3nhTrwnQrNREoYhQuZFB?pinataGatewayToken=cTSFGarZKrQBYaNWIpSmlyFsuBoJ_LyocJ85LhvCU7kd4PKJYXMW6edUPjYdhYDs" alt="ETH logo" className="token-logo" />
+    wCPH on ETH Click here
+  </a>
+  <a href="https://bscscan.com/token/0x8220a8f26e8acae058fc83bc74ee37b5da9b6e97" target="_blank" rel="noopener noreferrer">
+    <img src="https://maroon-proud-cod-903.mypinata.cloud/ipfs/QmUNBaNZrtANTcdQCmWgA7SHbdyCe355ssbX3ZYzwnNeny?pinataGatewayToken=cTSFGarZKrQBYaNWIpSmlyFsuBoJ_LyocJ85LhvCU7kd4PKJYXMW6edUPjYdhYDs" alt="BNB logo" className="token-logo" />
+    wCPH on BNB Click here
+  </a>
+</div>
+      <div className="token-stats">
+        <p><strong>Total Locked:</strong> {totalLocked ? totalLocked : 'Loading...'}</p>
+        <p><strong>Total Minted:</strong> {totalMinted ? totalMinted : 'Loading...'}</p>
+      </div>
+      <p>Connect your wallet and start transferring assets between networks.</p>
+    </header>
+
+    {walletAddress && (
+      <div className="wallet-info">
+        <p>Connected Wallet: {walletAddress}</p>
+      </div>
+    )}
+
+    <div className="bridge-body">
+      <div className="network-selection">
+        <h2>From Chain</h2>
+        <select onChange={handleFromChainChange} className="form-select">
+          <option value="">-- Select From Chain --</option>
+          {Object.keys(networks).map(network => (
+            <option key={network} value={network}>
+              {networks[network].name}
+            </option>
+          ))}
+        </select>
+
+        {fromChain && (
+          <>
+            <h2>From Asset</h2>
+            <input type="text" value={fromAsset} readOnly className="form-control" />
+          </>
+        )}
+      </div>
+
+      {fromChain && (
+        <div className="transaction-form">
+          <h2>To Chain</h2>
+          <select onChange={handleToChainChange} className="form-select">
+            <option value="">-- Select To Chain --</option>
+            {fromChain === 'Cypherium'
+              ? ['XDC', 'ETH', 'BNB'].map(chain => (
+                  <option key={chain} value={chain}>
+                    {networks[chain]?.name}
+                  </option>
+                ))
+              : ['Cypherium'].map(chain => (
+                  <option key={chain} value={chain}>
+                    {networks[chain]?.name}
+                  </option>
+                ))}
+          </select>
+
+          {toChain && (
+            <>
+              <h2>To Asset</h2>
+              <input type="text" value={toAsset} readOnly className="form-control" />
+            </>
+          )}
+
+{isLockEnabled && (
+  <>
+    <h2>Amount to Bridge</h2>
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <input
+        id="lockAmount"
+        name="lockAmount"
+        type="text"
+        placeholder="Amount"
+        className="form-control"
+        required
+        value={lockAmount}
+        onChange={(e) => setLockAmount(e.target.value)}
+      />
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={handleMaxButtonClick}
+      >
+        MAX
+      </button>
+    </div>
+    <button className="btn btn-primary" onClick={handleLock}>
+      Receive wCPH
+    </button>
+  </>
+)}
+
+{isBurnEnabled && (
+  <>
+    <h2>Amount to Bridge</h2>
+    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+      <input
+        id="burnAmount"
+        name="burnAmount" 
+        type="text"
+        placeholder="Amount"
+        className="form-control"
+        required
+        value={burnAmount}
+        onChange={(e) => setBurnAmount(e.target.value)}
+      />
+      <button
+        type="button"
+        className="btn btn-secondary"
+        onClick={handleMaxButtonClick}
+      >
+        MAX
+      </button>
+    </div>
+    <button className="btn btn-danger" onClick={handleBurn}>
+      Receive CPH
+    </button>
+  </>
+)}
+
+        </div>
+      )}
+    </div>
+
+<footer className="footer">
+  <div className="contact-info">
+    Contact: <a href="https://t.me/kj0551" target="_blank" rel="noopener noreferrer">https://t.me/kj0551</a>
+  </div>
+  &copy; 2024 Cypherium Community. All Rights Reserved.
+</footer>
+  </>
+);
+}
+
+
+export default App;

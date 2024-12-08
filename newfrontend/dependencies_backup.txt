@@ -1,0 +1,14 @@
+newfrontend@0.1.0 /root/testbridge/newfrontend
+├── @babel/plugin-proposal-private-property-in-object@7.21.11
+├── @testing-library/jest-dom@6.6.3
+├── @testing-library/react@16.0.1
+├── @testing-library/user-event@14.5.2
+├── axios@1.7.7
+├── bootstrap@5.3.3
+├── ethers@6.13.4
+├── react-dom@18.3.1
+├── react-scripts@5.0.1
+├── react@18.3.1
+├── web-vitals@4.2.4
+└── web3@4.15.0
+

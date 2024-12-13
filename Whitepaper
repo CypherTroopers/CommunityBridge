@@ -1,0 +1,70 @@
+Cypherium Community Bridge
+Whitepaper
+Version 1.0
+
+Abstract
+The Cypherium Community Bridge is a community-driven project established to create an environment where CPH (the native token of Cypherium) can be more easily purchased and utilized. The primary goal of this project is to increase the liquidity of CPH and promote its global adoption by listing it on decentralized exchanges (DEXs).
+Through this bridge, users can lock their CPH and receive an equivalent amount of wCPH (Wrapped CPH) as a representation on other chains. The locked CPH and issued wCPH always maintain a 1:1 ratio, which can be verified by users on the platform at any time.
+
+Problem Statement
+Currently, Cypherium's CPH token is only traded on a limited number of exchanges, resulting in low liquidity.
+The absence of trading pairs on DEXs creates barriers for new users wanting to purchase CPH.
+Proposed Solution
+The Cypherium Community Bridge addresses these challenges with the following solutions:
+
+Introduction of Wrapped Tokens: By locking CPH and issuing wCPH, users can transfer the value of CPH across other chains.
+Provision of a Cross-Chain Bridge: A seamless mechanism for users to convert between CPH and wCPH.
+Transparency and Reliability: All transactions and token supply information are publicly accessible and verifiable on-chain.
+Cross-Chain Bridge Structure
+1. Core Components
+The Cypherium Community Bridge consists of the following components:
+
+Lock & Unlock Contracts
+
+A smart contract on the Cypherium chain to lock CPH.
+A smart contract on other chains to mint wCPH.
+Provides functionality on other chains to mint (issue) or burn (destroy) wCPH tokens.
+The issued amount is always tied to the locked amount of CPH.
+Bridge Nodes
+
+Validate lock transactions or burn transactions and trigger operations between contracts.
+Relay messages between networks.
+
+2. Workflow
+a. CPH → wCPH (Lock & Mint)
+The user sends CPH to a designated address on the Cypherium chain (lock operation).
+The lock transaction is detected by the bridge nodes.
+The mint contract on the target chain (e.g., Ethereum, BNB Chain, XDC Network) is triggered to issue the corresponding amount of wCPH to the user's address.
+b. wCPH → CPH (Burn & Unlock)
+The user sends wCPH to a designated address on the target chain (burn operation).
+The burn transaction is detected by the bridge nodes.
+The unlock contract on the Cypherium chain is triggered to release the corresponding amount of locked CPH back to the user.
+
+3. Technical Details
+Smart Contracts
+Cypherium Chain: LockUnlock Contract (0x4f0df59d54a8f44fb78e336baaf6ef0335dd3216)
+Ethereum Chain: MintBurn Contract (0x07A7dc47d675c2A907c926BBc5F59bb3Bd144796)
+XDC Network Chain: MintBurn Contract(0xe084FFE165fBfbD376f5b3046B56FF4F00fDf73f)
+BNB Smart Chain: MintBurn Contract (0x7642A3D428CD84455dc0626837d98C51149e6d2A)
+
+Transaction Verification
+Transactions are validated by confirming transaction ID, transaction hash, wallet address, and the amount of CPH or wCPH sent. The transaction is fully executed only after successful verification.
+Security
+The smart contract code has been verified on respective blockchain explorers.
+
+Token Specifications
+wCPH is deployed as ERC-20, BEP-20, and XRC-20 tokens, and additional chains may be considered based on community demand.
+Locked and issued amounts are continuously synchronized and verifiable in real time.
+
+Use Cases
+Increased Liquidity: Listing wCPH on DEXs facilitates more active trading of CPH.
+New Investment Opportunities: Users on other chains can now invest in CPH.
+Ecosystem Expansion: Cypherium becomes more accessible for collaboration with projects on other chains.
+
+Tokenomics
+CPH Supply: Existing Cypherium tokens are locked in their original form.
+wCPH Issuance: Maintains a 1:1 ratio with locked CPH.
+Fees: A transaction fee of 0.1% + network fees is collected to cover operational costs such as server maintenance and community events. As the price of CPH increases, fees will be gradually reduced.
+
+Conclusion
+The Cypherium Community Bridge leverages the power of the community to promote the global adoption and liquidity of CPH. This project provides a new approach to blockchain interoperability and token accessibility by ensuring transparency and strengthening collaboration with other chains.

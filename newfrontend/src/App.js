@@ -29,10 +29,10 @@ function App() {
   const [actualReceived, setActualReceived] = useState(0);
   const [tokenType, setTokenType] = useState('');
 const networks = {
-  "Cypherium": { "chainId": 16166, "name": "Cypherium", "asset": "CPH", "lockContractAddress": "0x4F0dF59d54a8f44FB78E336bAaf6EF0335dd3216" },
-  "XDC": { "chainId": 50, "burnContractAddress": "0xe084FFE165fBfbD376f5b3046B56FF4F00fDf73f", "name": "XDC", "asset": "wCPH" },
-  "ETH": { "chainId": 1, "burnContractAddress": "0x07A7dc47d675c2A907c926BBc5F59bb3Bd144796", "name": "ETH", "asset": "wCPH" },
-  "BNB": { "chainId": 56, "burnContractAddress": "0x7642A3D428CD84455dc0626837d98C51149e6d2A", "name": "BNB", "asset": "wCPH" }
+  "Cypherium": { "chainId": 16166, "name": "Cypherium", "asset": "CPH", "lockContractAddress": "Your ContractAddress" },
+  "XDC": { "chainId": 50, "burnContractAddress": "Your ContractAddress", "name": "XDC", "asset": "wCPH" },
+  "ETH": { "chainId": 1, "burnContractAddress": "Your ContractAddress", "name": "ETH", "asset": "wCPH" },
+  "BNB": { "chainId": 56, "burnContractAddress": "Your ContractAddress", "name": "BNB", "asset": "wCPH" }
 };
 
   useEffect(() => {
